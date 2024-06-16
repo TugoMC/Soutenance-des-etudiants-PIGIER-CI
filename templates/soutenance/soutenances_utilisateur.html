@@ -1,0 +1,111 @@
+{% extends 'pagestyle/base.html' %}
+
+{% block title %}
+Gestion des soutenances
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Soutenances pour {{ user.username }}</h1>
+
+    <ul class="list-unstyled">
+        {% for soutenance in soutenances %}
+        <li class="mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ soutenance.title }}</strong><br>
+                    <span class="text-muted">Description:</span>
+                    {% if soutenance.description|length > 100 %}
+                        {{ soutenance.description|slice:":100" }}... <a href="{% url 'soutenance-detail' soutenance.id %}" class="btn btn-link">Voir plus</a>
+                    {% else %}
+                        {{ soutenance.description }}
+                    {% endif %}
+                    <br>
+                    <span class="text-muted">Date:</span> {{ soutenance.date }}<br>
+                    <span class="text-muted">Superviseur:</span> {{ soutenance.superviseur.username }}<br>
+                    <span class="text-muted">Étudiant:</span> {{ soutenance.etudiant.username }}<br>
+                </div>
+                <div class="ml-auto">
+                    {% if user.role == 'student' %}
+                        {% if soutenance.pdf_file %}
+                            <span>Fichier importé</span>
+                        {% else %}
+                            <form id="uploadForm{{ soutenance.id }}" action="{% url 'upload_pdf' soutenance.id %}" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <label for="pdfUpload{{ soutenance.id }}" class="btn btn-secondary mt-2">
+                                    Lier un fichier PDF
+                                </label>
+                                <input type="file" id="pdfUpload{{ soutenance.id }}" name="pdf_file" accept=".pdf" style="display: none;" onchange="submitForm('{{ soutenance.id }}')">
+                            </form>
+                        {% endif %}
+                    {% elif user.role == 'supervisor' %}
+                        {% if soutenance.pdf_file %}
+                            <a href="{% url 'download_pdf' soutenance.id %}" class="btn btn-success mt-2">Télécharger le fichier joint</a>
+                        {% else %}
+                            Aucune pièce jointe
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </li>
+        {% empty %}
+        <li>Aucune soutenance trouvée.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    function submitForm(soutenanceId) {
+        const form = document.getElementById('uploadForm' + soutenanceId);
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': form.querySelector('input[name="csrfmiddlewaretoken"]').value
+            }
+        }).then(response => {
+            return response.json();
+        }).then(data => {
+            if (data.success) {
+                window.location.reload();  // Recharger la page pour afficher la mise à jour
+            } else {
+                alert('Erreur lors du téléchargement du fichier PDF.');
+                console.log(data.errors);
+            }
+        }).catch(error => {
+            console.error('Erreur:', error);
+            alert('Une erreur est survenue lors de l\'envoi du fichier.');
+        });
+    }
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-unstyled {
+        padding-left: 0;
+        list-style: none;
+    }
+
+    .list-unstyled li {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 5px;
+    }
+
+    .list-unstyled li:not(:last-child) {
+        margin-bottom: 20px;
+    }
+
+    .text-muted {
+        color: #6c757d;
+    }
+
+    .btn-link {
+        color: #007bff;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'pagestyle/base.html' %}
+
+{% block title %}
+Gestion des soutenances
+{% endblock %}
+
+{% block extra_css %}
+    <!-- Ajoutez ici des CSS spécifiques à cette page si nécessaire -->
+    <style>
+        /* Styles spécifiques à cette page */
+        .users-container {
+            margin-top: 50px;
+            text-align: center;
+        }
+        .users-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        .users-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .users-list li {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="users-container">
+            <h1 class="users-title">Liste des Utilisateurs</h1>
+            <ul class="users-list">
+                {% for user in users %}
+                    <li>{{ user.username }} - {{ user.get_role_display }}</li>
+                {% empty %}
+                    <li>Aucun utilisateur trouvé.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,27 @@
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+
+# Environnements virtuels
+venv/
+env/
+.venv/
+.env/
+
+# Configurations locales
+*.env
+config/settings/local.py
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Système d'exploitation
+.DS_Store
+Thumbs.db

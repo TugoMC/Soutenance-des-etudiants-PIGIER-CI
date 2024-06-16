@@ -1,0 +1,29 @@
+{% extends 'pagestyle/base.html' %}
+
+{% block title %}
+Gestion des soutenances
+{% endblock %}
+
+{% block extra_css %}
+    <!-- Ajoutez ici des CSS spécifiques à cette page si nécessaire -->
+    <style>
+        /* Styles spécifiques à cette page */
+        .profile-info {
+            margin-top: 20px;
+        }
+        .profile-info p {
+            margin-bottom: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <h1>Votre profil</h1>
+        <div class="profile-info">
+            <p><strong>Nom d'utilisateur:</strong> {{ user.username }}</p>
+            <p><strong>Adresse email:</strong> {{ user.email }}</p>
+            <p><strong>Rôle:</strong> {{ user.role }}</p>
+        </div>
+    </div>
+{% endblock %}

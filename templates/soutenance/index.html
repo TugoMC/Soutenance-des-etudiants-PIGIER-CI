@@ -1,0 +1,33 @@
+{% extends 'pagestyle/base.html' %}
+
+{% block title %}
+Gestion des soutenances
+{% endblock %}
+
+{% block extra_css %}
+    <!-- Ajoutez ici des CSS spécifiques à cette page si nécessaire -->
+    <style>
+        /* Styles spécifiques à cette page */
+        .home-container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        .home-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        .welcome-message {
+            font-size: 1.2rem;
+            color: #666;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="home-container">
+            <h1 class="home-title">Bienvenue sur la page d'accueil !</h1>
+            <p class="welcome-message">Vous êtes connecté en tant que <strong>{{ user.username }}</strong>.</p>
+        </div>
+    </div>
+{% endblock %}

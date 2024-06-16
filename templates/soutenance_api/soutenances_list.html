@@ -1,0 +1,215 @@
+{% extends 'pagestyle/base.html' %}
+{% block title %}
+Gestion des soutenances
+{% endblock %}
+{% block content %}
+<style>
+    /* Styles pour aligner le bouton et le titre */
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .add-button {
+        background-color: #4CAF50; /* Vert */
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    .add-button:hover {
+        background-color: #45a049;
+    }
+    .soutenance-item {
+        margin-bottom: 20px;
+        overflow: hidden; /* Ensure content doesn't overflow */
+        display: flex;
+        justify-content: space-between; /* Aligns buttons to the right */
+        align-items: center; /* Align items vertically */
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .action-buttons {
+        white-space: nowrap; /* Prevent buttons from wrapping */
+    }
+    .action-buttons button {
+        padding: 8px 16px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+        margin-left: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        border: none;
+        color: white;
+    }
+    .edit-button {
+        background-color: #ffc107; /* Jaune */
+    }
+    .view-button {
+        background-color: #007bff; /* Bleu */
+    }
+    .delete-button {
+        background-color: #dc3545; /* Rouge */
+    }
+    .action-buttons button:hover {
+        opacity: 0.8;
+    }
+    .edit-form {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    .modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 900;
+    }
+</style>
+
+<div class="header-container">
+    <h1>Liste des Soutenances</h1>
+    <button class="add-button" onclick="openModal('add-modal')">Ajouter une soutenance</button>
+</div>
+
+<ul>
+    {% for soutenance in soutenances %}
+        <li class="soutenance-item">
+            <div>
+                <strong>{{ soutenance.title }}</strong><br>
+                {{ soutenance.description|truncatechars:100 }}<br>
+                Date: {{ soutenance.date }}<br>
+                Superviseur: {% if soutenance.superviseur %}{{ soutenance.superviseur.username }}{% else %}Aucun{% endif %}<br>
+                Étudiant: {% if soutenance.etudiant %}{{ soutenance.etudiant.username }}{% else %}Aucun{% endif %}
+            </div>
+            <div class="action-buttons">
+                <button class="edit-button" onclick="openModal('edit-modal-{{ soutenance.id }}')">Modifier</button>
+                <button class="view-button" onclick="viewSoutenance({{ soutenance.id }})">Regarder</button>
+                <button class="delete-button" onclick="deleteSoutenance({{ soutenance.id }})">Supprimer</button>
+            </div>
+            <div id="edit-modal-{{ soutenance.id }}" class="edit-form">
+                <form id="edit-form-{{ soutenance.id }}" method="post" action="{% url 'soutenance-update' soutenance.id %}">
+                    {% csrf_token %}
+                    <label for="id_title">Titre:</label><br>
+                    <input type="text" id="id_title" name="title" value="{{ soutenance.title }}" required><br>
+                    <label for="id_description">Description:</label><br>
+                    <textarea id="id_description" name="description" rows="4" cols="50" required>{{ soutenance.description }}</textarea><br>
+                    <label for="id_date">Date:</label><br>
+                    <input type="date" id="id_date" name="date" value="{{ soutenance.date }}" required><br>
+                    <label for="id_superviseur">Superviseur:</label><br>
+                    <select id="id_superviseur" name="superviseur">
+                        <option value="">Sélectionner un superviseur</option>
+                        {% for superviseur in superviseurs %}
+                            <option value="{{ superviseur.id }}" {% if soutenance.superviseur and superviseur.id == soutenance.superviseur.id %}selected{% endif %}>{{ superviseur.username }}</option>
+                        {% endfor %}
+                    </select><br><br>
+                    <label for="id_etudiant">Étudiant:</label><br>
+                    <select id="id_etudiant" name="etudiant">
+                        <option value="">Sélectionner un étudiant</option>
+                        {% for etudiant in etudiants %}
+                            <option value="{{ etudiant.id }}" {% if soutenance.etudiant and etudiant.id == soutenance.etudiant.id %}selected{% endif %}>{{ etudiant.username }}</option>
+                        {% endfor %}
+                    </select><br><br>
+                    <button type="submit" class="edit-button">Modifier</button>
+                </form>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+
+<div id="add-modal" class="edit-form">
+    <form id="add-form" method="post" action="{% url 'soutenance-list' %}">
+        {% csrf_token %}
+        <label for="id_title">Titre:</label><br>
+        <input type="text" id="id_title" name="title" required><br>
+        <label for="id_description">Description:</label><br>
+        <textarea id="id_description" name="description" rows="4" cols="50" required></textarea><br>
+        <label for="id_date">Date:</label><br>
+        <input type="date" id="id_date" name="date" required><br>
+        <label for="id_superviseur">Superviseur:</label><br>
+        <select id="id_superviseur" name="superviseur">
+            <option value="">Sélectionner un superviseur</option>
+            {% for superviseur in superviseurs %}
+                <option value="{{ superviseur.id }}">{{ superviseur.username }}</option>
+            {% endfor %}
+        </select><br><br>
+        <label for="id_etudiant">Étudiant:</label><br>
+        <select id="id_etudiant" name="etudiant">
+            <option value="">Sélectionner un étudiant</option>
+            {% for etudiant in etudiants %}
+                <option value="{{ etudiant.id }}">{{ etudiant.username }}</option>
+            {% endfor %}
+        </select><br><br>
+        <button type="submit" class="add-button">Ajouter</button>
+    </form>
+</div>
+
+
+<script>
+    function openModal(modalId) {
+        var modal = document.getElementById(modalId);
+        modal.style.display = 'block';
+
+        var backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop';
+        document.body.appendChild(backdrop);
+        backdrop.style.display = 'block';
+
+        backdrop.onclick = function() {
+            modal.style.display = 'none';
+            backdrop.remove();
+        };
+    }
+
+    function deleteSoutenance(id) {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette soutenance ?')) {
+            var url = '{% url "soutenance-delete" 0 %}'.replace('0', id);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: id })
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Une erreur s\'est produite lors de la suppression.');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        }
+    }
+
+    function viewSoutenance(id) {
+        var url = '{% url "soutenance-detail" 0 %}'.replace('0', id);
+        window.location.href = url;
+    }
+</script>
+{% endblock %}

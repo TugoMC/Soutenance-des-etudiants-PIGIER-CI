@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des soutenances</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to right, #262b40, #ebf4f6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            margin-top: 40px; /* Adjusted margin */
+            text-align: center;
+            opacity: 0;
+            animation: fadeInUp 1s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .input-group label {
+            margin-right: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .input-group input {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px; /* Increased padding */
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #303650;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeInUp 1s forwards 0.5s;
+        }
+        
+        .btn-submit:hover {
+            background-color: #262b40;
+        }
+        
+        p {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        p a {
+            color: #303650;
+            text-decoration: none;
+        }
+        
+        p a:hover {
+            text-decoration: underline;
+        }
+        
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Font Awesome pour les icônes -->
+</head>
+<body>
+    <div class="form-container">
+        <h2>Connexion</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="input-group">
+                {{ form.username.label_tag }}
+                {{ form.username }}
+            </div>
+            <div class="input-group">
+                {{ form.password.label_tag }}
+                {{ form.password }}
+            </div>
+            <button type="submit" class="btn-submit">Connexion</button>
+        </form>
+        <p>Pas encore de compte ? <a href="{% url 'signup' %}">Inscrivez-vous ici</a>.</p>
+    </div>
+</body>
+</html>
