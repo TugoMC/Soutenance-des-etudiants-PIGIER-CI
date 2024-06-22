@@ -5,25 +5,176 @@ Gestion des soutenances
 {% endblock %}
 
 {% block extra_css %}
-    <!-- Ajoutez ici des CSS spécifiques à cette page si nécessaire -->
-    <style>
-        /* Styles spécifiques à cette page */
-        .profile-info {
-            margin-top: 20px;
-        }
-        .profile-info p {
-            margin-bottom: 10px;
-        }
-    </style>
+<style>
+    .profile-info {
+        margin-top: 20px;
+    }
+    .profile-info p {
+        margin-bottom: 10px;
+    }
+    .edit-form,
+    .select-classe-box {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+    }
+    .modal-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 900;
+    }
+    .edit-form label,
+    .select-classe-box label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .edit-form input,
+    .edit-form select,
+    .select-classe-box select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .edit-form button,
+    .select-classe-box button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 4px;
+        background-color: #303650;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .edit-form button:hover,
+    .select-classe-box button:hover {
+        background-color: #262b40;
+    }
+    .profile-actions {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        margin-top: 10px;
+    }
+    .edit-profile-btn {
+        margin-left: 10px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid">
-        <h1>Votre profil</h1>
-        <div class="profile-info">
-            <p><strong>Nom d'utilisateur:</strong> {{ user.username }}</p>
-            <p><strong>Adresse email:</strong> {{ user.email }}</p>
-            <p><strong>Rôle:</strong> {{ user.role }}</p>
-        </div>
+<div class="container-fluid">
+    <h1>Votre profil</h1>
+    <div class="profile-info">
+        <p><strong>Nom d'utilisateur:</strong> {{ user.username }}</p>
+        <p><strong>Adresse email:</strong> {{ user.email }}</p>
+        <p><strong>Nom:</strong> {{ user.last_name }}</p>
+        <p><strong>Prénom:</strong> {{ user.first_name }}</p>
+        <p><strong>Rôle:</strong> {{ user.get_role_display }}</p>
+        {% if user.role == 'etudiant' %}
+            <p><strong>Filière:</strong> {{ user.get_filiere_display }}</p>
+            <p><strong>Classe:</strong> {{ user.get_classe_display }}</p>
+        {% endif %}
     </div>
+
+    <div class="profile-actions">
+        <button id="edit-profile-btn" class="btn btn-secondary">Modifier mes informations</button>
+        {% if user.role == 'etudiant' %}
+            <button id="choose-classe-btn" class="btn btn-secondary">Choisir la classe</button>
+        {% endif %}
+    </div>
+
+    <div id="select-classe-dialog" class="select-classe-box">
+        <h2>Choisir la classe</h2>
+        <form id="select-classe-form" method="post" action="{% url 'select-classe' %}">
+            {% csrf_token %}
+            <label for="id_classe">Classe:</label>
+            <select id="id_classe" name="classe" required>
+                <option value="">Sélectionnez une classe</option>
+                {% for value, display in user.get_classe_choices %}
+                    <option value="{{ value }}" {% if user.classe == value %}selected{% endif %}>{{ display }}</option>
+                {% endfor %}
+            </select><br>
+            <button type="submit" id="select-classe-submit" class="add-button">Valider</button>
+        </form>
+    </div>
+
+    <div id="modal-backdrop" class="modal-backdrop"></div>
+
+    <div id="edit-profile-dialog" class="edit-form">
+        <h2>Modifier mes informations</h2>
+        <form id="edit-profile-form" method="post" action="{% url 'edit-profile' %}">
+            {% csrf_token %}
+            <label for="id_username">Nom d'utilisateur:</label>
+            <input type="text" id="id_username" name="username" value="{{ user.username }}" required><br>
+
+            <label for="id_first_name">Prénom:</label>
+            <input type="text" id="id_first_name" name="first_name" value="{{ user.first_name }}" required><br>
+
+            <label for="id_last_name">Nom:</label>
+            <input type="text" id="id_last_name" name="last_name" value="{{ user.last_name }}" required><br>
+
+            {% if user.role == 'etudiant' %}
+                <label for="id_filiere">Filière:</label>
+                <select id="id_filiere" name="filiere">
+                    <option value="">Sélectionnez une filière</option>
+                    {% for value, display in user.FILIERE_CHOICES %}
+                        <option value="{{ value }}" {% if user.filiere == value %}selected{% endif %}>{{ display }}</option>
+                    {% endfor %}
+                </select><br>
+            {% endif %}
+
+            <button type="submit" class="add-button">Enregistrer les modifications</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var editProfileBtn = document.getElementById('edit-profile-btn');
+        var editProfileDialog = document.getElementById('edit-profile-dialog');
+        var modalBackdrop = document.getElementById('modal-backdrop');
+        var selectClasseDialog = document.getElementById('select-classe-dialog');
+        var chooseClasseBtn = document.getElementById('choose-classe-btn');
+
+        // Function to show dialogs and backdrop
+        function showDialog(dialog) {
+            dialog.style.display = 'block';
+            modalBackdrop.style.display = 'block';
+        }
+
+        // Function to hide dialogs and backdrop
+        function hideDialogs() {
+            editProfileDialog.style.display = 'none';
+            selectClasseDialog.style.display = 'none';
+            modalBackdrop.style.display = 'none';
+        }
+
+        editProfileBtn.addEventListener('click', function() {
+            showDialog(editProfileDialog);
+        });
+
+        modalBackdrop.addEventListener('click', hideDialogs);
+
+        chooseClasseBtn.addEventListener('click', function() {
+            showDialog(selectClasseDialog);
+        });
+    });
+</script>
 {% endblock %}

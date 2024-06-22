@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des soutenances</title>
+    <title>Gestion des soutenances - Connexion</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +28,7 @@
             border-radius: 8px;
             width: 90%;
             max-width: 400px;
-            margin-top: 40px; /* Adjusted margin */
+            margin-top: 40px;
             text-align: center;
             opacity: 0;
             animation: fadeInUp 1s forwards;
@@ -64,7 +64,7 @@
         .input-group input {
             border: 1px solid #ccc;
             border-radius: 4px;
-            padding: 10px; /* Increased padding */
+            padding: 10px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -99,9 +99,13 @@
         p a:hover {
             text-decoration: underline;
         }
-        
+
+        .errorlist {
+            color: red;
+            list-style-type: none;
+            padding: 0;
+        }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> <!-- Font Awesome pour les icônes -->
 </head>
 <body>
     <div class="form-container">
@@ -111,14 +115,29 @@
             <div class="input-group">
                 {{ form.username.label_tag }}
                 {{ form.username }}
+                {% if form.username.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.username.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
             <div class="input-group">
                 {{ form.password.label_tag }}
                 {{ form.password }}
+                {% if form.password.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.password.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
             <button type="submit" class="btn-submit">Connexion</button>
         </form>
         <p>Pas encore de compte ? <a href="{% url 'signup' %}">Inscrivez-vous ici</a>.</p>
+        <p><a href="{% url 'password_reset' %}">Mot de passe oublié ?</a></p>
     </div>
 </body>
 </html>

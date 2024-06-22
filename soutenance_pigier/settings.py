@@ -43,6 +43,13 @@ INSTALLED_APPS = [
     'soutenance_api'
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -127,13 +134,34 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-AUTH_USER_MODEL = 'authapp.CustomUser'
-
-
-LOGIN_URL = '/auth/login/'
 
 # dans settings.py
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = 'media'  # Utilisation directe sans os.path
 
+AUTH_USER_MODEL = 'authapp.CustomUser'
+
+
+LOGIN_URL = 'login'
+
+LOGIN_REDIRECT_URL = 'templates/soutenance/index.html'
+LOGOUT_REDIRECT_URL = 'login'
+
+
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ouattarajunior418@gmail.com'
+EMAIL_HOST_PASSWORD = 'nyls srsp jawk mnmg'
+DEFAULT_FROM_EMAIL = 'webmaster@your-domain.com'
+
+
+BASE_URL = 'http://localhost:8000'
+
+PASSWORD_RESET_TIMEOUT = 60*60*24
+
+DEFAULT_DOMAIN = '127.0.0.1'
