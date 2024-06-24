@@ -1,31 +1,72 @@
 {% extends 'pagestyle/base.html' %}
 
 {% block title %}
-Gestion des soutenances
+    Gestion des utilisateurs
 {% endblock %}
 
 {% block extra_css %}
-    <!-- Ajoutez ici des CSS spécifiques à cette page si nécessaire -->
     <style>
         /* Styles spécifiques à cette page */
         .users-container {
             margin-top: 50px;
             text-align: center;
         }
+
         .users-title {
             font-size: 2.5rem;
-            margin-bottom: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
         }
+
+        .search-form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .search-form input{
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .search-form input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+
+        
+
         .users-list {
             list-style: none;
             padding-left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
         .users-list li {
+            background-color: #fff;
             border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .users-list li:hover {
+            transform: scale(1.02);
+        }
+
+        .users-list strong {
+            color: #34495e;
         }
     </style>
 {% endblock %}
@@ -34,9 +75,25 @@ Gestion des soutenances
     <div class="container-fluid">
         <div class="users-container">
             <h1 class="users-title">Liste des Utilisateurs</h1>
+            <form method="get" action="{% url 'user-list' %}" class="search-form">
+                <input type="text" name="query" placeholder="Rechercher par nom, prénom, ou nom d'utilisateur" value="{{ query }}">
+                <input type="text" name="filiere" placeholder="Rechercher par filière" value="{{ filiere }}">
+                <button type="submit" class="btn btn-primary">Rechercher</button>
+            </form>
             <ul class="users-list">
                 {% for user in users %}
-                    <li>{{ user.username }} - {{ user.get_role_display }}</li>
+                    <li>
+                        <strong>Nom d'utilisateur:</strong> {{ user.username }}<br>
+                        {% if user.first_name %}
+                            <strong>Nom:</strong> {{ user.last_name }}<br>
+                            <strong>Prénom:</strong> {{ user.first_name }}<br>
+                        {% endif %}
+                        <strong>Rôle:</strong> {{ user.get_role_display }}
+                        {% if user.role == user.ETUDIANT %}
+                            <br><strong>Filière:</strong> {{ user.get_filiere_display }}
+                            <br><strong>Classe:</strong> {{ user.get_classe_display }}
+                        {% endif %}
+                    </li>
                 {% empty %}
                     <li>Aucun utilisateur trouvé.</li>
                 {% endfor %}

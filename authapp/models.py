@@ -99,3 +99,6 @@ class CustomUser(AbstractUser):
             return self.CLASSE_RGL_CHOICES
         else:
             return []  # Retourne une liste vide par défaut ou le choix par défaut
+
+
+

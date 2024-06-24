@@ -16,6 +16,7 @@ from .forms import EditProfileForm
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
 from django.http import HttpResponse
+from .forms import UserSearchForm
 
 User = get_user_model()
 
@@ -98,7 +99,8 @@ def edit_profile(request):
         'form': form,
         'is_etudiant': user.role == CustomUser.ETUDIANT
     }
-    return render(request, 'authapp/edit_profile.html', context)
+    return render(request, 'user/profile.html', context)
+
 
 def activate_account(request, uidb64, token):
     try:
@@ -148,3 +150,27 @@ def select_classe(request):
             return redirect('profile')    # Redirige vers la page de profil (ou une autre page appropriée)
 
     return HttpResponse(status=405)
+
+
+
+def user_search_view(request):
+    form = UserSearchForm(request.GET)
+    users = User.objects.all()
+
+    if form.is_valid():
+        nom = form.cleaned_data.get('nom')
+        prenom = form.cleaned_data.get('prenom')
+        filiere = form.cleaned_data.get('filiere')
+
+        if nom:
+            users = users.filter(last_name__icontains=nom)
+        if prenom:
+            users = users.filter(first_name__icontains=prenom)
+        if filiere:
+            users = users.filter(filiere__icontains=filiere)
+
+    context = {
+        'form': form,
+        'users': users,
+    }
+    return render(request, 'user/user_list.html', context)

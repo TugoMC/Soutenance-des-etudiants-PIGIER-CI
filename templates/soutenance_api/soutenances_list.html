@@ -64,6 +64,8 @@ Gestion des soutenances
     .action-buttons button:hover {
         opacity: 0.8;
     }
+
+    /* Styles pour les modals */
     .edit-form {
         display: none;
         position: fixed;
@@ -76,6 +78,8 @@ Gestion des soutenances
         border-radius: 5px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         z-index: 1000;
+        max-height: 80%; /* Limite la hauteur du modal */
+        overflow-y: auto; /* Permet le défilement si le contenu dépasse la hauteur */
     }
     .modal-backdrop {
         display: none;
@@ -89,6 +93,7 @@ Gestion des soutenances
     }
 </style>
 
+
 <div class="header-container">
     <h1>Liste des Soutenances</h1>
     <button class="add-button" onclick="openModal('add-modal')">Ajouter une soutenance</button>
@@ -101,8 +106,13 @@ Gestion des soutenances
                 <strong>{{ soutenance.title }}</strong><br>
                 {{ soutenance.description|truncatechars:100 }}<br>
                 Date: {{ soutenance.date }}<br>
+                Heure: {{ soutenance.heure }}<br>
                 Superviseur: {% if soutenance.superviseur %}{{ soutenance.superviseur.username }}{% else %}Aucun{% endif %}<br>
-                Étudiant: {% if soutenance.etudiant %}{{ soutenance.etudiant.username }}{% else %}Aucun{% endif %}
+                Étudiant: {% if soutenance.etudiant %}{{ soutenance.etudiant.username }}{% else %}Aucun{% endif %}<br>
+                Membres du Jury: 
+                {% for membre in soutenance.membres_jury.all %}
+                    {{ membre.username }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
             </div>
             <div class="action-buttons">
                 <button class="edit-button" onclick="openModal('edit-modal-{{ soutenance.id }}')">Modifier</button>
@@ -112,24 +122,36 @@ Gestion des soutenances
             <div id="edit-modal-{{ soutenance.id }}" class="edit-form">
                 <form id="edit-form-{{ soutenance.id }}" method="post" action="{% url 'soutenance-update' soutenance.id %}">
                     {% csrf_token %}
-                    <label for="id_title">Titre:</label><br>
-                    <input type="text" id="id_title" name="title" value="{{ soutenance.title }}" required><br>
-                    <label for="id_description">Description:</label><br>
-                    <textarea id="id_description" name="description" rows="4" cols="50" required>{{ soutenance.description }}</textarea><br>
-                    <label for="id_date">Date:</label><br>
-                    <input type="date" id="id_date" name="date" value="{{ soutenance.date }}" required><br>
-                    <label for="id_superviseur">Superviseur:</label><br>
-                    <select id="id_superviseur" name="superviseur">
+                    <label for="id_title_{{ soutenance.id }}">Titre:</label><br>
+                    <input type="text" id="id_title_{{ soutenance.id }}" name="title" value="{{ soutenance.title }}" required><br>
+                    <label for="id_description_{{ soutenance.id }}">Description:</label><br>
+                    <textarea id="id_description_{{ soutenance.id }}" name="description" rows="4" cols="50" required>{{ soutenance.description }}</textarea><br>
+                    <label for="id_date_{{ soutenance.id }}">Date:</label><br>
+                    <input type="date" id="id_date_{{ soutenance.id }}" name="date" value="{{ soutenance.date }}" required><br>
+                    <label for="id_superviseur_{{ soutenance.id }}">Superviseur:</label><br>
+                    <select id="id_superviseur_{{ soutenance.id }}" name="superviseur">
                         <option value="">Sélectionner un superviseur</option>
                         {% for superviseur in superviseurs %}
                             <option value="{{ superviseur.id }}" {% if soutenance.superviseur and superviseur.id == soutenance.superviseur.id %}selected{% endif %}>{{ superviseur.username }}</option>
                         {% endfor %}
                     </select><br><br>
-                    <label for="id_etudiant">Étudiant:</label><br>
-                    <select id="id_etudiant" name="etudiant">
+                    <label for="id_etudiant_{{ soutenance.id }}">Étudiant:</label><br>
+                    <select id="id_etudiant_{{ soutenance.id }}" name="etudiant">
                         <option value="">Sélectionner un étudiant</option>
                         {% for etudiant in etudiants %}
                             <option value="{{ etudiant.id }}" {% if soutenance.etudiant and etudiant.id == soutenance.etudiant.id %}selected{% endif %}>{{ etudiant.username }}</option>
+                        {% endfor %}
+                    </select><br><br>
+                    <label for="id_heure_{{ soutenance.id }}">Heure:</label><br>
+                    <select id="id_heure_{{ soutenance.id }}" name="heure">
+                        {% for heure in HEURE_CHOICES %}
+                            <option value="{{ heure.0 }}" {% if soutenance.heure == heure.0 %}selected{% endif %}>{{ heure.1 }}</option>
+                        {% endfor %}
+                    </select><br><br>
+                    <label for="id_membres_jury_{{ soutenance.id }}">Membres du Jury (max 2):</label><br>
+                    <select id="id_membres_jury_{{ soutenance.id }}" name="membres_jury" multiple size="5" onchange="limitSelection(this, 2)">
+                        {% for membre in membres_jury %}
+                            <option value="{{ membre.id }}" {% if membre in soutenance.membres_jury.all %}selected{% endif %}>{{ membre.username }}</option>
                         {% endfor %}
                     </select><br><br>
                     <button type="submit" class="edit-button">Modifier</button>
@@ -162,10 +184,21 @@ Gestion des soutenances
                 <option value="{{ etudiant.id }}">{{ etudiant.username }}</option>
             {% endfor %}
         </select><br><br>
+        <label for="id_heure">Heure:</label><br>
+        <select id="id_heure" name="heure">
+            {% for heure in HEURE_CHOICES %}
+                <option value="{{ heure.0 }}">{{ heure.1 }}</option>
+            {% endfor %}
+        </select><br><br>
+        <label for="id_membres_jury">Membres du Jury (max 2):</label><br>
+        <select id="id_membres_jury" name="membres_jury" multiple size="5" onchange="limitSelection(this, 2)">
+            {% for membre in membres_jury %}
+                <option value="{{ membre.id }}">{{ membre.username }}</option>
+            {% endfor %}
+        </select><br><br>
         <button type="submit" class="add-button">Ajouter</button>
     </form>
 </div>
-
 
 <script>
     function openModal(modalId) {
@@ -210,6 +243,15 @@ Gestion des soutenances
     function viewSoutenance(id) {
         var url = '{% url "soutenance-detail" 0 %}'.replace('0', id);
         window.location.href = url;
+    }
+
+    function limitSelection(selectElement, maxSelection) {
+        let selectedOptions = Array.from(selectElement.selectedOptions);
+        if (selectedOptions.length > maxSelection) {
+            // Désélectionner l'option la plus récemment ajoutée
+            selectElement.options[selectedOptions[maxSelection].index].selected = false;
+            alert(`Vous ne pouvez sélectionner que ${maxSelection} membres du jury.`);
+        }
     }
 </script>
 {% endblock %}

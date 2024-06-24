@@ -24,9 +24,17 @@ Gestion des soutenances
                     <span class="text-muted">Date:</span> {{ soutenance.date }}<br>
                     <span class="text-muted">Superviseur:</span> {{ soutenance.superviseur.username }}<br>
                     <span class="text-muted">Étudiant:</span> {{ soutenance.etudiant.username }}<br>
+                    <span class="text-muted">Membre(s) du jury:</span>
+                    {% if soutenance.membres_jury.count > 0 %}
+                        {% for membre in soutenance.membres_jury.all %}
+                            {{ membre.username }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        Aucun
+                    {% endif %}
                 </div>
                 <div class="ml-auto">
-                    {% if user.role == 'student' %}
+                    {% if user.role == 'etudiant' %}
                         {% if soutenance.pdf_file %}
                             <span>Fichier importé</span>
                         {% else %}
@@ -38,7 +46,7 @@ Gestion des soutenances
                                 <input type="file" id="pdfUpload{{ soutenance.id }}" name="pdf_file" accept=".pdf" style="display: none;" onchange="submitForm('{{ soutenance.id }}')">
                             </form>
                         {% endif %}
-                    {% elif user.role == 'supervisor' %}
+                    {% elif user.role == 'superviseur' or user.role == 'membre_jury' %}
                         {% if soutenance.pdf_file %}
                             <a href="{% url 'download_pdf' soutenance.id %}" class="btn btn-success mt-2">Télécharger le fichier joint</a>
                         {% else %}

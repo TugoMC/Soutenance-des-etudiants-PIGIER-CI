@@ -1,147 +1,182 @@
 {% extends 'pagestyle/base.html' %}
 
 {% block title %}
-Gestion des soutenances
+    Profil
 {% endblock %}
 
 {% block extra_css %}
-<style>
-    .profile-info {
-        margin-top: 20px;
-    }
-    .profile-info p {
-        margin-bottom: 10px;
-    }
-    .edit-form,
-    .select-classe-box {
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: white;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-    }
-    .modal-backdrop {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 900;
-    }
-    .edit-form label,
-    .select-classe-box label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-    }
-    .edit-form input,
-    .edit-form select,
-    .select-classe-box select {
-        width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-    }
-    .edit-form button,
-    .select-classe-box button {
-        width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 4px;
-        background-color: #303650;
-        color: white;
-        font-size: 16px;
-        cursor: pointer;
-    }
-    .edit-form button:hover,
-    .select-classe-box button:hover {
-        background-color: #262b40;
-    }
-    .profile-actions {
-        display: flex;
-        justify-content: flex-start;
-        align-items: center;
-        margin-top: 10px;
-    }
-    .edit-profile-btn {
-        margin-left: 10px;
-    }
-</style>
+    <style>
+        /* Styles spécifiques à cette page */
+        .profile-container {
+            margin: 50px auto;
+            max-width: 800px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+
+        .profile-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .profile-info {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 20px;
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+        }
+
+        .profile-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .profile-actions button {
+            margin: 0 10px;
+        }
+
+        .edit-form,
+        .select-classe-box {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 900;
+        }
+
+        .edit-form label,
+        .select-classe-box label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .edit-form input,
+        .edit-form select,
+        .select-classe-box select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .edit-form button,
+        .select-classe-box button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #303650;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .edit-form button:hover,
+        .select-classe-box button:hover {
+            background-color: #262b40;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <h1>Votre profil</h1>
-    <div class="profile-info">
-        <p><strong>Nom d'utilisateur:</strong> {{ user.username }}</p>
-        <p><strong>Adresse email:</strong> {{ user.email }}</p>
-        <p><strong>Nom:</strong> {{ user.last_name }}</p>
-        <p><strong>Prénom:</strong> {{ user.first_name }}</p>
-        <p><strong>Rôle:</strong> {{ user.get_role_display }}</p>
-        {% if user.role == 'etudiant' %}
-            <p><strong>Filière:</strong> {{ user.get_filiere_display }}</p>
-            <p><strong>Classe:</strong> {{ user.get_classe_display }}</p>
-        {% endif %}
-    </div>
+    <h1 class="profile-title">Votre profil</h1>
+    <div class="profile-container">
+        
 
-    <div class="profile-actions">
-        <button id="edit-profile-btn" class="btn btn-secondary">Modifier mes informations</button>
-        {% if user.role == 'etudiant' %}
-            <button id="choose-classe-btn" class="btn btn-secondary">Choisir la classe</button>
-        {% endif %}
-    </div>
-
-    <div id="select-classe-dialog" class="select-classe-box">
-        <h2>Choisir la classe</h2>
-        <form id="select-classe-form" method="post" action="{% url 'select-classe' %}">
-            {% csrf_token %}
-            <label for="id_classe">Classe:</label>
-            <select id="id_classe" name="classe" required>
-                <option value="">Sélectionnez une classe</option>
-                {% for value, display in user.get_classe_choices %}
-                    <option value="{{ value }}" {% if user.classe == value %}selected{% endif %}>{{ display }}</option>
-                {% endfor %}
-            </select><br>
-            <button type="submit" id="select-classe-submit" class="add-button">Valider</button>
-        </form>
-    </div>
-
-    <div id="modal-backdrop" class="modal-backdrop"></div>
-
-    <div id="edit-profile-dialog" class="edit-form">
-        <h2>Modifier mes informations</h2>
-        <form id="edit-profile-form" method="post" action="{% url 'edit-profile' %}">
-            {% csrf_token %}
-            <label for="id_username">Nom d'utilisateur:</label>
-            <input type="text" id="id_username" name="username" value="{{ user.username }}" required><br>
-
-            <label for="id_first_name">Prénom:</label>
-            <input type="text" id="id_first_name" name="first_name" value="{{ user.first_name }}" required><br>
-
-            <label for="id_last_name">Nom:</label>
-            <input type="text" id="id_last_name" name="last_name" value="{{ user.last_name }}" required><br>
-
+        <div class="profile-info">
+            <p><strong>Nom d'utilisateur:</strong> {{ user.username }}</p>
+            <p><strong>Adresse email:</strong> {{ user.email }}</p>
+            <p><strong>Nom:</strong> {{ user.last_name }}</p>
+            <p><strong>Prénom:</strong> {{ user.first_name }}</p>
+            <p><strong>Rôle:</strong> {{ user.get_role_display }}</p>
             {% if user.role == 'etudiant' %}
-                <label for="id_filiere">Filière:</label>
-                <select id="id_filiere" name="filiere">
-                    <option value="">Sélectionnez une filière</option>
-                    {% for value, display in user.FILIERE_CHOICES %}
-                        <option value="{{ value }}" {% if user.filiere == value %}selected{% endif %}>{{ display }}</option>
+                <p><strong>Filière:</strong> {{ user.get_filiere_display }}</p>
+                <p><strong>Classe:</strong> {{ user.get_classe_display }}</p>
+            {% endif %}
+        </div>
+
+        <div class="profile-actions">
+            <button id="edit-profile-btn" class="btn btn-secondary">Modifier mes informations</button>
+            {% if user.role == 'etudiant' %}
+                <button id="choose-classe-btn" class="btn btn-secondary">Choisir la classe</button>
+            {% endif %}
+        </div>
+
+        <div id="select-classe-dialog" class="select-classe-box">
+            <h2>Choisir la classe</h2>
+            <form id="select-classe-form" method="post" action="{% url 'select-classe' %}">
+                {% csrf_token %}
+                <label for="id_classe">Classe:</label>
+                <select id="id_classe" name="classe" required>
+                    <option value="">Sélectionnez une classe</option>
+                    {% for value, display in user.get_classe_choices %}
+                        <option value="{{ value }}" {% if user.classe == value %}selected{% endif %}>{{ display }}</option>
                     {% endfor %}
                 </select><br>
-            {% endif %}
+                <button type="submit" class="btn btn-primary">Valider</button>
+            </form>
+        </div>
 
-            <button type="submit" class="add-button">Enregistrer les modifications</button>
-        </form>
+        <div id="modal-backdrop" class="modal-backdrop"></div>
+
+        <div id="edit-profile-dialog" class="edit-form">
+            <h2>Modifier mes informations</h2>
+            <form id="edit-profile-form" method="post" action="{% url 'edit-profile' %}">
+                {% csrf_token %}
+                <label for="id_username">Nom d'utilisateur:</label>
+                <input type="text" id="id_username" name="username" value="{{ user.username }}" required><br>
+
+                <label for="id_first_name">Prénom:</label>
+                <input type="text" id="id_first_name" name="first_name" value="{{ user.first_name }}" required><br>
+
+                <label for="id_last_name">Nom:</label>
+                <input type="text" id="id_last_name" name="last_name" value="{{ user.last_name }}" required><br>
+
+                {% if user.role == 'etudiant' %}
+                    <label for="id_filiere">Filière:</label>
+                    <select id="id_filiere" name="filiere">
+                        <option value="">Sélectionnez une filière</option>
+                        {% for value, display in user.FILIERE_CHOICES %}
+                            <option value="{{ value }}" {% if user.filiere == value %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select><br>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+            </form>
+        </div>
     </div>
 </div>
 

@@ -5,49 +5,85 @@
 {% endblock %}
 
 {% block extra_css %}
-    <!-- Ajoutez ici des CSS spécifiques à cette page si nécessaire -->
     <style>
-        /* Styles spécifiques à cette page */
-        .detail-title {
-            text-align: center;
-            margin-top: 50px;
-            margin-bottom: 30px;
-        }
-        .soutenance-detail {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .soutenance-detail p {
-            margin-bottom: 10px;
-        }
+        
+            /* Styles spécifiques à cette page */
+            .detail-title {
+                text-align: center;
+                margin-top: 20px; /* Réduire l'espace en haut */
+                margin-bottom: 30px;
+            }
+        
+            .soutenance-detail {
+                background-color: #fff;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                transition: transform 0.2s ease-in-out;
+            }
+        
+            .soutenance-detail p {
+                margin-bottom: 10px;
+                font-size: 1.1rem;
+                color: #34495e;
+            }
+        
+            .soutenance-detail p strong {
+                font-weight: 600;
+                color: #2c3e50;
+            }
+        
+           
+      
+        
     </style>
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid">
-        <h1 class="detail-title">Détails de la Soutenance</h1>
-        <div class="soutenance-detail">
-            <p><strong>Titre:</strong> {{ soutenance.title }}</p>
-            <p><strong>Description:</strong> {{ soutenance.description }}</p>
-            <p><strong>Date:</strong> {{ soutenance.date }}</p>
-            <p><strong>Superviseur:</strong> 
-                {% if soutenance.superviseur %}
-                    {{ soutenance.superviseur.username }}
-                {% else %}
-                    Aucun
+<div class="container-fluid">
+    <!-- Bouton Retour -->
+    <button onclick="goBack()" class="btn btn-primary" style="margin-bottom: 10px;">Retour</button>
+    
+    <h1 class="detail-title">Détails de la Soutenance</h1>
+    <div class="soutenance-detail">
+        <p><strong>Titre:</strong> {{ soutenance.title }}</p>
+        <p><strong>Description:</strong> {{ soutenance.description }}</p>
+        <p><strong>Date:</strong> {{ soutenance.date }}</p>
+        <p><strong>Heure:</strong> {{ soutenance.heure }}</p>
+        <p><strong>Superviseur:</strong> 
+            {% if soutenance.superviseur %}
+                {{ soutenance.superviseur.username }}
+            {% else %}
+                Aucun
+            {% endif %}
+        </p>
+        <p><strong>Étudiant:</strong> 
+            {% if soutenance.etudiant %}
+                {{ soutenance.etudiant.username }}
+                {% if soutenance.etudiant.role == 'etudiant' %}
+                    <br><strong>Filière:</strong> {{ soutenance.etudiant.get_filiere_display }}
+                    <br><strong>Classe:</strong> {{ soutenance.etudiant.get_classe_display }}
                 {% endif %}
-            </p>
-            <p><strong>Étudiant:</strong> 
-                {% if soutenance.etudiant %}
-                    {{ soutenance.etudiant.username }}
-                {% else %}
-                    Aucun
-                {% endif %}
-            </p>
-        </div>
+            {% else %}
+                Aucun
+            {% endif %}
+        </p>
+        <p><strong>Membres du Jury:</strong> 
+            {% if soutenance.membres_jury.count > 0 %}
+                {% for membre in soutenance.membres_jury.all %}
+                    {{ membre.username }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            {% else %}
+                Aucun
+            {% endif %}
+        </p>
     </div>
+</div>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+</script>
 {% endblock %}

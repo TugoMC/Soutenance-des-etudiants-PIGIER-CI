@@ -85,7 +85,7 @@
                                     <span>Mes soutenances</span>
                                 </a>
                             </li>
-                            {% if user.role == 'supervisor' %}
+                            {% if user.is_superuser %}
                             <li class="nav-item">
                                 <a href="{% url 'user-list' %}" class="nav-link">
                                     <span class="sidebar-icon"><span class="fa fa-users"></span></span>

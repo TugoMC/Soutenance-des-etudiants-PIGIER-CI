@@ -79,11 +79,34 @@ class EditProfileForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
-        # Supprimer les champs 'filiere' et 'classe' si l'utilisateur n'est pas un étudiant
-        if self.instance.role != CustomUser.ETUDIANT:
-            self.fields.pop('filiere')
-            self.fields.pop('classe')
-
+        
         # Charger les choix dynamiquement, si besoin
         self.fields['filiere'].choices = [(filiere[0], filiere[1]) for filiere in CustomUser.FILIERE_CHOICES]
         self.fields['classe'].choices = [(classe[0], classe[1]) for classe in CustomUser.CLASSE_CHOICES]
+        
+        # Désactiver les champs 'filiere' et 'classe' si l'utilisateur n'est pas un étudiant
+        if self.instance.role != CustomUser.ETUDIANT:
+            self.fields['filiere'].disabled = True
+            self.fields['classe'].disabled = True
+
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        # Valider les champs 'filiere' et 'classe' si l'utilisateur est un étudiant
+        if self.instance.role == CustomUser.ETUDIANT:
+            filiere = cleaned_data.get('filiere')
+            classe = cleaned_data.get('classe')
+            
+            if not filiere:
+                self.add_error('filiere', "Ce champ est obligatoire.")
+            if not classe:
+                self.add_error('classe', "Ce champ est obligatoire.")
+        
+        return cleaned_data
+
+
+
+class UserSearchForm(forms.Form):
+    nom = forms.CharField(label='Nom', required=False)
+    prenom = forms.CharField(label='Prénom', required=False)
+    filiere = forms.CharField(label='Filière', required=False)

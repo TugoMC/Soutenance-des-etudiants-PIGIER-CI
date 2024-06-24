@@ -8,30 +8,36 @@ from django.contrib.auth.decorators import login_required
 from .forms import SoutenanceForm
 from django.contrib import messages
 from django.http import HttpResponse
+from django.db.models import Q
 
 
 @login_required
 def soutenance_list(request):
     if request.method == 'POST':
-        data = request.POST.copy()
-        data['superviseur'] = data.get('superviseur') or None  # Assurez-vous de gérer le cas où aucun superviseur n'est sélectionné
-        data['etudiant'] = data.get('etudiant') or None  # Gestion du champ étudiant
-        serializer = SoutenanceSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
+        form = SoutenanceForm(request.POST, request.FILES)
+        if form.is_valid():
+            soutenance = form.save()
+            membres_jury_ids = request.POST.getlist('membres_jury')
+            soutenance.membres_jury.set(membres_jury_ids)
             return redirect('soutenance-list')
         else:
-            return JsonResponse(serializer.errors, status=400)
-    else:
-        soutenances = Soutenance.objects.all()
-        superviseurs = CustomUser.objects.filter(role=CustomUser.SUPERVISOR)  # Filtrer les superviseurs
-        etudiants = CustomUser.objects.filter(role=CustomUser.STUDENT)  # Filtrer les étudiants
+            return JsonResponse(form.errors, status=400)
 
-        return render(request, 'soutenance_api/soutenances_list.html', {
-            'soutenances': soutenances,
-            'superviseurs': superviseurs,
-            'etudiants': etudiants  # Passer la liste des étudiants au template
-        })
+    soutenances = Soutenance.objects.all()
+    superviseurs = CustomUser.objects.filter(role=CustomUser.SUPERVISEUR)
+    etudiants = CustomUser.objects.filter(role=CustomUser.ETUDIANT)
+    membres_jury = CustomUser.objects.filter(role=CustomUser.MEMBRE_JURY)
+
+    context = {
+        'soutenances': soutenances,
+        'superviseurs': superviseurs,
+        'etudiants': etudiants,
+        'membres_jury': membres_jury,
+        'HEURE_CHOICES': Soutenance.HEURE_CHOICES,
+        'form': SoutenanceForm(),  # Formulaire vide pour l'ajout
+    }
+    return render(request, 'soutenance_api/soutenances_list.html', context)
+
 
 @login_required
 def soutenance_detail(request, id):
@@ -49,18 +55,32 @@ def soutenance_detail(request, id):
 @login_required
 def soutenance_update(request, id):
     soutenance = get_object_or_404(Soutenance, id=id)
-    if request.method == 'POST':
-        data = request.POST.copy()
-        data['superviseur'] = data.get('superviseur') or None
-        data['etudiant'] = data.get('etudiant') or None
-        serializer = SoutenanceSerializer(soutenance, data=data)
-        if serializer.is_valid():
-            serializer.save()
+    
+    if request.method == 'POST' or request.method == 'PUT':  # Gérer PUT aussi
+        form = SoutenanceForm(request.POST, request.FILES, instance=soutenance)
+        if form.is_valid():
+            soutenance = form.save(commit=False)
+            soutenance.save()
+            form.save_m2m()  # Pour gérer les ManyToMany fields comme membres_jury
             return redirect('soutenance-list')
         else:
-            return JsonResponse(serializer.errors, status=400)
-        
-        
+            return JsonResponse(form.errors, status=400)
+    else:
+        form = SoutenanceForm(instance=soutenance)
+        superviseurs = CustomUser.objects.filter(role=CustomUser.SUPERVISEUR)
+        etudiants = CustomUser.objects.filter(role=CustomUser.ETUDIANT)
+        membres_jury = CustomUser.objects.filter(role=CustomUser.MEMBRE_JURY)
+
+        context = {
+            'form': form,
+            'superviseurs': superviseurs,
+            'etudiants': etudiants,
+            'membres_jury': membres_jury,
+            'soutenance': soutenance,
+        }
+        return render(request, 'soutenance_api/soutenances_list.html', context)
+
+
 @login_required
 def soutenance_delete(request, id):
     soutenance = get_object_or_404(Soutenance, id=id)
@@ -70,16 +90,42 @@ def soutenance_delete(request, id):
     
 @login_required
 def user_list(request):
+    query = request.GET.get('query', '')  # Récupérer le terme de recherche pour nom, prénom ou nom d'utilisateur
+    filiere = request.GET.get('filiere', '')  # Récupérer la filière recherchée
+
+    # Commencer avec tous les utilisateurs
     users = CustomUser.objects.all()
-    return render(request, 'user/user_list.html', {'users': users})
+
+    # Filtrer par terme de recherche s'il est fourni
+    if query:
+        users = users.filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(username__icontains=query)
+        )
+
+    # Filtrer par filière s'il est fourni
+    if filiere:
+        users = users.filter(filiere__icontains=filiere)
+
+    context = {
+        'users': users,
+        'query': query,
+        'filiere': filiere,
+    }
+    return render(request, 'user/user_list.html', context)
+
 
 @login_required
 def soutenances_utilisateur(request):
     user = request.user  # Récupère l'utilisateur connecté
-    if user.role == 'student':
+
+    if user.role == CustomUser.ETUDIANT:
         soutenances = Soutenance.objects.filter(etudiant=user)
-    elif user.role == 'supervisor':
+    elif user.role == CustomUser.SUPERVISEUR:
         soutenances = Soutenance.objects.filter(superviseur=user)
+    elif user.role == CustomUser.MEMBRE_JURY:
+        soutenances = Soutenance.objects.filter(membres_jury=user)
     else:
         soutenances = None  # Gérer le cas où l'utilisateur n'a pas de soutenances associées
     
@@ -87,7 +133,10 @@ def soutenances_utilisateur(request):
         form = SoutenanceForm(request.POST, request.FILES)
         if form.is_valid():
             soutenance = form.save(commit=False)
-            soutenance.etudiant = user
+            if user.role == CustomUser.ETUDIANT:
+                soutenance.etudiant = user
+            elif user.role == CustomUser.SUPERVISEUR:
+                soutenance.superviseur = user
             soutenance.save()
             return redirect('soutenances_utilisateur')  # Redirection vers la même page après soumission
     else:
@@ -99,7 +148,6 @@ def soutenances_utilisateur(request):
         'form': form,  # Ajouter le formulaire au contexte
     }
     return render(request, 'soutenance/soutenances_utilisateur.html', context)
-
 
 
 @login_required
