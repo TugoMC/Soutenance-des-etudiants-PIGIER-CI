@@ -72,7 +72,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=15, choices=ROLE_CHOICES, default=ETUDIANT)
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank= True)
     is_active = models.BooleanField(default=False)
     filiere = models.CharField(max_length=50, choices=FILIERE_CHOICES, null=True, blank=True)
     classe = models.CharField(max_length=50, choices=CLASSE_CHOICES, null=True, blank=True)
