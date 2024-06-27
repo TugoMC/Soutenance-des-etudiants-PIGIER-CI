@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from .models import Soutenance
 from django.forms.models import model_to_dict
 from .serializers import SoutenanceSerializer
-from authapp.models import CustomUser  # Import du modèle CustomUser
+from authapp.models import CustomUser  
 from django.contrib.auth.decorators import login_required
 from .forms import SoutenanceForm
 from django.contrib import messages
@@ -34,7 +34,7 @@ def soutenance_list(request):
         'etudiants': etudiants,
         'membres_jury': membres_jury,
         'HEURE_CHOICES': Soutenance.HEURE_CHOICES,
-        'form': SoutenanceForm(),  # Formulaire vide pour l'ajout
+        'form': SoutenanceForm(),
     }
     return render(request, 'soutenance_api/soutenances_list.html', context)
 
@@ -44,11 +44,11 @@ def soutenance_detail(request, id):
     soutenance = Soutenance.objects.get(id=id)
     
     if request.headers.get('accept') == 'application/json':
-        # Si l'accept header est 'application/json', retourner les données en JSON
+        
         soutenance_json = model_to_dict(soutenance)
         return JsonResponse(soutenance_json)
     else:
-        # Sinon, retourner le rendu du template HTML
+        
         return render(request, 'soutenance_api/soutenances_detail.html', {'soutenance': soutenance})
 
 
@@ -56,12 +56,12 @@ def soutenance_detail(request, id):
 def soutenance_update(request, id):
     soutenance = get_object_or_404(Soutenance, id=id)
     
-    if request.method == 'POST' or request.method == 'PUT':  # Gérer PUT aussi
+    if request.method == 'POST' or request.method == 'PUT':  
         form = SoutenanceForm(request.POST, request.FILES, instance=soutenance)
         if form.is_valid():
             soutenance = form.save(commit=False)
             soutenance.save()
-            form.save_m2m()  # Pour gérer les ManyToMany fields comme membres_jury
+            form.save_m2m()  
             return redirect('soutenance-list')
         else:
             return JsonResponse(form.errors, status=400)
@@ -90,13 +90,13 @@ def soutenance_delete(request, id):
     
 @login_required
 def user_list(request):
-    query = request.GET.get('query', '')  # Récupérer le terme de recherche pour nom, prénom ou nom d'utilisateur
-    filiere = request.GET.get('filiere', '')  # Récupérer la filière recherchée
+    query = request.GET.get('query', '')  
+    filiere = request.GET.get('filiere', '')  
 
-    # Commencer avec tous les utilisateurs
+   
     users = CustomUser.objects.all()
 
-    # Filtrer par terme de recherche s'il est fourni
+   
     if query:
         users = users.filter(
             Q(first_name__icontains=query) |
@@ -104,7 +104,7 @@ def user_list(request):
             Q(username__icontains=query)
         )
 
-    # Filtrer par filière s'il est fourni
+    
     if filiere:
         users = users.filter(filiere__icontains=filiere)
 
@@ -118,7 +118,7 @@ def user_list(request):
 
 @login_required
 def soutenances_utilisateur(request):
-    user = request.user  # Récupère l'utilisateur connecté
+    user = request.user  
 
     if user.role == CustomUser.ETUDIANT:
         soutenances = Soutenance.objects.filter(etudiant=user)
@@ -127,7 +127,7 @@ def soutenances_utilisateur(request):
     elif user.role == CustomUser.MEMBRE_JURY:
         soutenances = Soutenance.objects.filter(membres_jury=user)
     else:
-        soutenances = None  # Gérer le cas où l'utilisateur n'a pas de soutenances associées
+        soutenances = None  
     
     if request.method == 'POST':
         form = SoutenanceForm(request.POST, request.FILES)
@@ -138,14 +138,14 @@ def soutenances_utilisateur(request):
             elif user.role == CustomUser.SUPERVISEUR:
                 soutenance.superviseur = user
             soutenance.save()
-            return redirect('soutenances_utilisateur')  # Redirection vers la même page après soumission
+            return redirect('soutenances_utilisateur')
     else:
         form = SoutenanceForm()
     
     context = {
         'soutenances': soutenances,
-        'role': user.role,  # Ajouter le rôle de l'utilisateur au contexte pour le template
-        'form': form,  # Ajouter le formulaire au contexte
+        'role': user.role, 
+        'form': form, 
     }
     return render(request, 'soutenance/soutenances_utilisateur.html', context)
 
@@ -175,13 +175,13 @@ def delete_pdf(request, soutenance_id):
             soutenance.pdf_file.delete(save=True)
             messages.success(request, 'Fichier PDF supprimé avec succès.')
     
-    return redirect('soutenances-utilisateur')  # Redirection vers la liste des soutenances de l'utilisateur
+    return redirect('soutenances-utilisateur')  
 
 def download_pdf(request, soutenance_id):
     soutenance = get_object_or_404(Soutenance, pk=soutenance_id)
-    # Assurez-vous que votre modèle Soutenance a un champ pdf_file
+   
     if soutenance.pdf_file:
-        # Remplacez 'chemin/vers/votre/fichier.pdf' par le chemin réel de votre fichier PDF
+       
         with open(soutenance.pdf_file.path, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/pdf')
             response['Content-Disposition'] = 'inline; filename=' + soutenance.pdf_file.name

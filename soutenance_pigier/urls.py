@@ -24,7 +24,7 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authapp.urls')),
-    path('', index_view, name='home'),  # Route de la page d'accueil '/'
+    path('', index_view, name='home'),  
     path('logout/', custom_logout_view, name='logout'),
     path('se/', include('soutenance_api.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

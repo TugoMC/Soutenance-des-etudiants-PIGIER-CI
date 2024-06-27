@@ -1,4 +1,3 @@
-# authapp/urls.py
 
 from django.urls import path
 from .views import SignUpView, LoginView, activate_account, register_done_view

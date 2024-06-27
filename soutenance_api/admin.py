@@ -1,4 +1,3 @@
-# dans soutenance_api/admin.py
 
 from django.contrib import admin
 from .models import Soutenance

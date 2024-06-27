@@ -1,5 +1,3 @@
-# authapp/views.py
-
 
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.views import LoginView
@@ -29,12 +27,12 @@ class SignUpView(View):
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
-        form = self.form_class(request.POST, request=request)  # Passer request ici
+        form = self.form_class(request.POST, request=request)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_active = False  # Le compte n'est pas encore activé
+            user.is_active = False  
             user.save()
-            form.send_activation_email(user, request)  # Envoi de l'e-mail d'activation avec request
+            form.send_activation_email(user, request) 
             return redirect('register_done')
         return render(request, self.template_name, {'form': form})
     
@@ -68,7 +66,7 @@ def custom_logout_view(request):
     logout(request)
     return redirect('login')
 
-# Vue personnalisée pour le login
+
 class CustomLoginView(LoginView):
     template_name = 'authapp/login.html'
     form_class = LoginForm
@@ -76,9 +74,9 @@ class CustomLoginView(LoginView):
     
 @login_required
 def profile_view(request):
-    user = request.user  # Récupère l'utilisateur connecté
+    user = request.user  
     context = {
-        'user': user  # Passe l'utilisateur au contexte du template
+        'user': user 
     }
     return render(request, 'user/profile.html', context)
 
@@ -91,7 +89,7 @@ def edit_profile(request):
         form = EditProfileForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('profile')  # Assurez-vous que 'profile' est la vue correcte
+            return redirect('profile') 
     else:
         form = EditProfileForm(instance=user)
 
@@ -113,10 +111,10 @@ def activate_account(request, uidb64, token):
         user.is_active = True
         user.save()
         messages.success(request, 'Votre compte a été activé avec succès ! Vous pouvez maintenant vous connecter.')
-        return redirect('login')  # Rediriger vers la page de connexion
+        return redirect('login') 
     else:
         messages.error(request, 'Le lien d\'activation est invalide ou a expiré.')
-        return redirect('home')  # Rediriger vers la page d'accueil ou une autre page appropriée
+        return redirect('home')
     
     
 def register_done_view(request):
@@ -127,16 +125,16 @@ def register_done_view(request):
 @login_required
 def fetch_classe_choices(request):
     filiere = request.GET.get('filiere', None)
-    user = request.user  # Utilisateur actuellement connecté
+    user = request.user
 
     if filiere:
-        if user.role == CustomUser.ETUDIANT:  # Vérifiez que l'utilisateur est un étudiant
+        if user.role == CustomUser.ETUDIANT: 
             classe_choices = user.get_classe_choices()
             return JsonResponse(classe_choices, safe=False)
         else:
-            return JsonResponse({}, status=403)  # Retourne une erreur 403 si l'utilisateur n'est pas un étudiant
+            return JsonResponse({}, status=403)  
     else:
-        return JsonResponse({}, status=400)  # Retourne une erreur 400 si la filière n'est pas fournie
+        return JsonResponse({}, status=400) 
     
     
 
@@ -145,9 +143,9 @@ def select_classe(request):
     if request.method == 'POST':
         classe = request.POST.get('classe')
         if classe:
-            request.user.classe = classe  # Met à jour l'utilisateur connecté
-            request.user.save()           # Sauvegarde la mise à jour
-            return redirect('profile')    # Redirige vers la page de profil (ou une autre page appropriée)
+            request.user.classe = classe 
+            request.user.save()           
+            return redirect('profile')    
 
     return HttpResponse(status=405)
 

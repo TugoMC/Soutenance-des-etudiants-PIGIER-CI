@@ -36,7 +36,7 @@ class SignUpForm(UserCreationForm):
         activation_link = self.activation_link(user, request)
 
         # Sujet et contenu de l'e-mail
-        subject = '[Your Application] Activation de compte'
+        subject = '[Soutenance PIGIER] Activation de compte'
         html_message = render_to_string('authapp/activation_email.html', {'activation_link': activation_link})
         plain_message = strip_tags(html_message)
         from_email = settings.DEFAULT_FROM_EMAIL
@@ -66,7 +66,7 @@ class LoginForm(AuthenticationForm):
         widget=forms.TextInput(attrs={'autofocus': True})
     )
     password = forms.CharField(
-        label="Password",
+        label="Mot de passe",
         strip=False,
         widget=forms.PasswordInput
     )

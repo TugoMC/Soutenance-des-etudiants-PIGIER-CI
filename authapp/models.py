@@ -98,7 +98,7 @@ class CustomUser(AbstractUser):
         elif self.filiere == self.RGL:
             return self.CLASSE_RGL_CHOICES
         else:
-            return []  # Retourne une liste vide par défaut ou le choix par défaut
+            return []  
 
 
 
